@@ -1,0 +1,109 @@
+#ifndef PROJECT_CORE_H
+#define PROJECT_CORE_H
+
+// ============================================================
+//  Mini Renderer - 核心工具层
+//  提供：日志、文件读取、时间/帧率统计
+// ============================================================
+
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <chrono>
+
+namespace mr
+{
+
+// ------------------------------ 日志 ------------------------------
+// 统一日志入口，方便后续替换成文件日志或 ImGui 控制台
+enum class LogLevel
+{
+  Info,
+  Warn,
+  Error
+};
+
+inline void log(LogLevel level, const std::string &msg)
+{
+  const char *tag = "[INFO ]";
+  if (level == LogLevel::Warn)
+    tag = "[WARN ]";
+  else if (level == LogLevel::Error)
+    tag = "[ERROR]";
+
+  std::ostream &out = (level == LogLevel::Error) ? std::cerr : std::cout;
+  out << tag << " " << msg << std::endl;
+}
+
+inline void logInfo(const std::string &msg) { log(LogLevel::Info, msg); }
+inline void logWarn(const std::string &msg) { log(LogLevel::Warn, msg); }
+inline void logError(const std::string &msg) { log(LogLevel::Error, msg); }
+
+// ------------------------------ 文件读取 ------------------------------
+// 读取文本文件全部内容（用于 GLSL 源码）
+inline std::string readTextFile(const std::string &path)
+{
+  std::ifstream file;
+  file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  try
+  {
+    file.open(path);
+    std::stringstream ss;
+    ss << file.rdbuf();
+    file.close();
+    return ss.str();
+  }
+  catch (std::ifstream::failure &e)
+  {
+    std::cerr << "[ERROR] 无法读取文件: " << path << std::endl;
+    return std::string();
+  }
+}
+
+// ------------------------------ 帧率统计 ------------------------------
+// 记录最近 N 帧耗时，输出平滑后的 FPS，避免单帧抖动
+class FrameStats
+{
+public:
+  FrameStats()
+      : m_lastTime(clock::now()), m_frameCount(0), m_fps(0.0f), m_frameMs(0.0f)
+  {
+  }
+
+  // 每帧调用一次，返回本帧的 deltaTime（秒）
+  float tick()
+  {
+    auto now = clock::now();
+    float dt = std::chrono::duration<float>(now - m_lastTime).count();
+    m_lastTime = now;
+
+    m_frameMs = dt * 1000.0f;
+    m_frameCount++;
+    m_accumTime += dt;
+
+    // 每累积 0.5 秒刷新一次 FPS 显示
+    if (m_accumTime >= 0.5f)
+    {
+      m_fps = static_cast<float>(m_frameCount) / m_accumTime;
+      m_frameCount = 0;
+      m_accumTime = 0.0f;
+    }
+    return dt;
+  }
+
+  float fps() const { return m_fps; }
+  float frameMs() const { return m_frameMs; }
+
+private:
+  using clock = std::chrono::high_resolution_clock;
+  clock::time_point m_lastTime;
+  int m_frameCount;
+  float m_fps;
+  float m_frameMs;
+  float m_accumTime = 0.0f;
+};
+
+} // namespace mr
+
+#endif // PROJECT_CORE_H

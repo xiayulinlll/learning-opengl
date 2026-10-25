@@ -1,0 +1,15 @@
+# Executables
+*.exe
+*.o
+
+# 编译产物（output 里的 DLL 是仓库自带运行库，需保留）
+imgui.ini
+
+# 临时日志 / 截图
+*.log
+*.err
+_*.tmp
+_*.png
+build_out.txt
+build2.txt
+run.txt
