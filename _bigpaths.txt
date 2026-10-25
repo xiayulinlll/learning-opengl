@@ -1,9 +1,0 @@
-lib/libassimp.a
-lib/libassimp.dll.a
-output/libassimp.dll
-src/41_shadow_mapping/images/2021-11-25_155337.gif
-static/model/cerberus/Cerberus.obj
-static/model/nanosuit/nanosuit.blend
-static/model/rock/Rock-Texture-Surface.jpg
-static/texture/Alexs_Apt_2k.hdr
-static/texture/Ditch-River_2k.hdr
